@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Issue Form</title>
+  <style>
+    :root{
+      --bg1:#f6f7fb;
+      --bg2:#e9f1ff;
+      --card:#ffffff;
+      --text:#0b1220;
+      --muted:#6b7280;
+      --border:#e6e8f0;
+      --border2:#eef1f7;
+      --shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+      --primary:#1e3a8a;   /* navy */
+      --primary2:#0b4aa6;  /* deep blue */
+      --ring: rgba(30, 58, 138, 0.20);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 700px at 20% 0%, var(--bg2), var(--bg1)),
+        linear-gradient(180deg, rgba(30,58,138,0.06), rgba(255,255,255,0));
+      color: var(--text);
+      margin: 0;
+      padding: 28px 16px;
+    }
+
+    .card {
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card::before{
+      content:"";
+      display:block;
+      height: 4px;
+      margin: -18px -18px 14px;
+      border-radius: 16px 16px 0 0;
+      background: linear-gradient(90deg, rgba(30,58,138,0.95), rgba(11,74,166,0.95));
+    }
+
+    .logos {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding: 4px 0 12px;
+      border-bottom: 1px solid var(--border2);
+      margin-bottom: 14px;
+    }
+    .logoBox { display:flex; align-items:center; gap:10px; min-width: 0; }
+    .logoBox img { height:44px; max-width: 220px; width:auto; object-fit:contain; display:block; }
+    .logoCaption { font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    h2 { margin: 0 0 16px; font-size: 22px; letter-spacing: -0.01em; }
+
+    .tabs {
+      display:flex;
+      gap:10px;
+      margin: 10px 0 14px;
+      padding: 6px;
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+    .tabBtn{
+      flex:1;
+      appearance:none;
+      border:1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tabBtn[aria-selected="true"]{
+      border-color: rgba(30,58,138,0.18);
+      background: #fff;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+      color: var(--primary);
+    }
+
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; }
+
+    label { font-size: 13px; font-weight: 650; display:block; margin: 10px 0 6px; }
+    input, select, textarea, button {
+      width:100%;
+      padding: 11px 12px;
+      border: 1px solid #cfd6e4;
+      border-radius: 12px;
+      background: #fff;
+      font-size: 14px;
+    }
+    input::placeholder, textarea::placeholder { color: #9aa3b2; }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(30, 58, 138, 0.55);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+
+    textarea { min-height: 120px; resize: vertical; }
+    .full { grid-column: 1 / -1; }
+    .row { margin-top: 6px; }
+    .hint { font-size:12px; color:var(--muted); margin-top:6px; }
+    button {
+      cursor:pointer;
+      border:none;
+      background: linear-gradient(180deg, var(--primary), var(--primary2));
+      color:#fff;
+      font-weight:800;
+      padding: 12px 14px;
+      border-radius: 12px;
+    }
+    button:hover { filter: brightness(1.02); }
+    button:active { transform: translateY(1px); }
+
+    .tableWrap{
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+    }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead th{
+      text-align: left;
+      font-size: 12px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: #f8fafc;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border2);
+    }
+    tbody td{
+      padding: 12px;
+      border-bottom: 1px solid var(--border2);
+      vertical-align: top;
+    }
+    tbody tr:last-child td{ border-bottom: none; }
+    .pill{
+      display:inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #fff;
+    }
+    .pill.low{ color:#0f766e; background:#ecfeff; border-color:#99f6e4; }
+    .pill.medium{ color:#92400e; background:#fffbeb; border-color:#fde68a; }
+    .pill.high{ color:#991b1b; background:#fef2f2; border-color:#fecaca; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 50;
+    }
+    .overlay.show { display: flex; }
+    .modalCard{
+      width: min(520px, 100%);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 20px 70px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+    .modalHead{
+      padding: 14px 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border2);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .modalTitle{
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      margin: 0;
+      font-size: 16px;
+    }
+    .modalBody{ padding: 14px 16px 16px; color: var(--text); }
+    .modalActions{
+      padding: 0 16px 16px;
+      display:flex;
+      justify-content:flex-end;
+      gap: 10px;
+    }
+    .btnSecondary{
+      background: #fff;
+      border: 1px solid #cfd6e4;
+      color: var(--text);
+      font-weight: 800;
+    }
+    .spinnerRow{ display:flex; align-items:center; gap:12px; }
+    .spinner{
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid rgba(30,58,138,0.18);
+      border-top-color: rgba(30,58,138,0.95);
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 640px) {
+      body { padding: 18px 12px; }
+      .card { padding: 14px 12px; border-radius: 14px; }
+      .logos {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 2px 2px 12px;
+      }
+      .logoBox {
+        width: auto;
+        gap: 8px;
+      }
+      .logoBox:first-child { justify-content: flex-start; }
+      .logoBox:last-child { justify-content: flex-end; }
+      .logoBox img {
+        height: 38px;
+        max-width: 100%;
+      }
+      .grid { grid-template-columns: 1fr; gap: 12px; }
+      h2 { font-size: 20px; text-align: center; margin-bottom: 10px; }
+      label { margin-top: 6px; }
+      .tabs{ margin-top: 8px; }
+      thead{ display:none; }
+      table, tbody, tr, td{ display:block; width:100%; }
+      tbody tr{
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border2);
+      }
+      tbody td{
+        border: none;
+        padding: 6px 0;
+      }
+      tbody tr:last-child{ border-bottom: none; }
+      tbody td[data-label]::before{
+        content: attr(data-label) ": ";
+        font-weight: 800;
+        color: var(--muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logos">
+      <div class="logoBox">
+        <img
+          src="https://drive.google.com/thumbnail?id=1Xz9OtfLnrJnPqnjs3zQvpTCRJzwS9ARg&sz=w400"
+          alt="Client Logo"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          data-fallbacks="https://drive.google.com/uc?export=view&id=1Xz9OtfLnrJnPqnjs3zQvpTCRJzwS9ARg|https://lh3.googleusercontent.com/d/1Xz9OtfLnrJnPqnjs3zQvpTCRJzwS9ARg=w400"
+        />
+        <div class="logoCaption"></div>
+      </div>
+
+      <div class="logoBox">
+        <div class="logoCaption"></div>
+        <img
+          src="https://drive.google.com/thumbnail?id=1albdyTRXcooI9sbI6Weob5og9_NF3H8c&sz=w400"
+          alt="Contractor Company Logo"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          data-fallbacks="https://drive.google.com/uc?export=view&id=1albdyTRXcooI9sbI6Weob5og9_NF3H8c|https://lh3.googleusercontent.com/d/1albdyTRXcooI9sbI6Weob5og9_NF3H8c=w400"
+        />
+      </div>
+    </div>
+
+    <h3>Maintenance Issue Report Form</h3>
+
+    <div class="tabs" role="tablist" aria-label="Issue Tabs">
+      <button class="tabBtn" id="tabForm" type="button" role="tab" aria-selected="true" aria-controls="panelForm">New Issue (Form)</button>
+      <button class="tabBtn" id="tabList" type="button" role="tab" aria-selected="false" aria-controls="panelList">Issue List</button>
+    </div>
+
+    <section id="panelForm" role="tabpanel" aria-labelledby="tabForm">
+      <form id="issueForm">
+      <div class="grid">
+        <div>
+          <label for="dateTime">Date &amp; Time</label>
+          <input id="dateTime" name="dateTime" type="datetime-local" required />
+          <div class="hint">Auto-filled with the current date and time.</div>
+        </div>
+
+        <div>
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority" required>
+            <option value="" disabled selected>Select priority</option>
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="building">Building</label>
+          <select id="building" name="building" required>
+            <option value="" disabled selected>Select building</option>
+            <option value="Malaz">Malaz</option>
+            <option value="Fathai">Fathai</option>
+            <option value="Hassa">Hassa</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="floor">Floor</label>
+          <select id="floor" name="floor" required disabled>
+            <option value="" disabled selected>Select floor</option>
+          </select>
+          <div class="hint">Select a building to load available floors.</div>
+        </div>
+
+        <div class="full">
+          <label for="department">Department</label>
+          <input id="department" name="department" type="text" placeholder="e.g., IT / Admin / Maintenance" required />
+        </div>
+
+        <div class="full">
+          <label for="issueDescription">Issue Description</label>
+          <textarea id="issueDescription" name="issueDescription" placeholder="Describe the issue..." required></textarea>
+        </div>
+
+        <div class="full row">
+          <button type="submit">Submit</button>
+        </div>
+      </div>
+      </form>
+    </section>
+
+    <section id="panelList" role="tabpanel" aria-labelledby="tabList" hidden>
+      <div class="hint" style="margin: 0 0 10px;">
+      
+      </div>
+      <div class="tableWrap">
+        <table aria-label="Issue List">
+          <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>Priority</th>
+              <th>Building</th>
+              <th>Floor</th>
+              <th>Department</th>
+              <th>Issue Description</th>
+            </tr>
+          </thead>
+          <tbody id="issuesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modalHead">
+        <h3 class="modalTitle" id="modalTitle">Message</h3>
+        <button type="button" class="btnSecondary" id="modalCloseBtn" style="width:auto;padding:8px 10px;border-radius:10px;">Close</button>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+      <div class="modalActions">
+        <button type="button" id="modalOkBtn" style="width:auto;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Google Drive image links sometimes fail to render directly as <img>.
+    // This tries multiple URL formats automatically.
+    function attachImageFallback(img) {
+      img.addEventListener("error", () => {
+        const cur = img.getAttribute("data-cur-idx");
+        const idx = cur ? Number(cur) : 0;
+        const fallbacksRaw = img.getAttribute("data-fallbacks") || "";
+        const fallbacks = fallbacksRaw.split("|").map(s => s.trim()).filter(Boolean);
+        if (idx >= fallbacks.length) return;
+        img.setAttribute("data-cur-idx", String(idx + 1));
+        img.src = fallbacks[idx];
+      });
+    }
+
+    document.querySelectorAll("img[data-fallbacks]").forEach(attachImageFallback);
+
+    const tabFormBtn = document.getElementById("tabForm");
+    const tabListBtn = document.getElementById("tabList");
+    const panelForm = document.getElementById("panelForm");
+    const panelList = document.getElementById("panelList");
+
+    const dateTimeEl = document.getElementById("dateTime");
+    const buildingEl = document.getElementById("building");
+    const floorEl = document.getElementById("floor");
+    const formEl = document.getElementById("issueForm");
+    const issuesTbody = document.getElementById("issuesTbody");
+    const overlayEl = document.getElementById("overlay");
+    const modalTitleEl = document.getElementById("modalTitle");
+    const modalBodyEl = document.getElementById("modalBody");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+    const modalOkBtn = document.getElementById("modalOkBtn");
+    const submitBtn = formEl.querySelector('button[type="submit"]');
+
+    function showModal({ title, html }) {
+      modalTitleEl.textContent = title;
+      modalBodyEl.innerHTML = html;
+      overlayEl.classList.add("show");
+      overlayEl.setAttribute("aria-hidden", "false");
+    }
+
+    function hideModal() {
+      overlayEl.classList.remove("show");
+      overlayEl.setAttribute("aria-hidden", "true");
+    }
+
+    modalCloseBtn.addEventListener("click", hideModal);
+    modalOkBtn.addEventListener("click", hideModal);
+    overlayEl.addEventListener("click", (e) => {
+      if (e.target === overlayEl) hideModal();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && overlayEl.classList.contains("show")) hideModal();
+    });
+
+    function setActiveTab(which) {
+      const isForm = which === "form";
+      tabFormBtn.setAttribute("aria-selected", String(isForm));
+      tabListBtn.setAttribute("aria-selected", String(!isForm));
+      panelForm.hidden = !isForm;
+      panelList.hidden = isForm;
+    }
+
+    // Simple client-side protection for Issue List tab
+    // (Note: anyone with access to the HTML can still view data by editing the file.)
+    let listAuthorized = false;
+    const LIST_PASSWORD = "syed001";
+    // Google Sheets saving requires an Apps Script Web App URL.
+    // After you deploy the Apps Script, paste the Web App URL here:
+    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvdaUP5JOcW5B-C8N4kVVXgSTN3Yt2N8Q7sVpSkjmkYsMta74Pdj8l7QU4yaoMwFv8/exec";
+
+    function openListWithPassword() {
+      if (listAuthorized) {
+        setActiveTab("list");
+        loadIssuesFromSheet();
+        return true;
+      }
+
+      const entered = prompt("Issue List password required:");
+      if (entered === LIST_PASSWORD) {
+        listAuthorized = true;
+        setActiveTab("list");
+        loadIssuesFromSheet();
+        return true;
+      }
+
+      alert("You are not authorized. Please contact an authorized person.");
+      setActiveTab("form");
+      return false;
+    }
+
+    tabFormBtn.addEventListener("click", () => setActiveTab("form"));
+    tabListBtn.addEventListener("click", () => openListWithPassword());
+
+    const buildingFloors = {
+      Malaz: 8,
+      Fathai: 6,
+      Hassa: 4
+    };
+
+    // In-memory list (page refresh resets)
+    const issues = [];
+
+    function priorityClass(p) {
+      const v = String(p || "").toLowerCase();
+      if (v === "high") return "high";
+      if (v === "medium") return "medium";
+      return "low";
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderIssues() {
+      if (!issues.length) {
+        issuesTbody.innerHTML = `<tr><td colspan="6" style="padding:14px 12px;color:var(--muted);">No issues yet.</td></tr>`;
+        return;
+      }
+
+      issuesTbody.innerHTML = issues
+        .slice()
+        .reverse()
+        .map((it) => {
+          const priClass = priorityClass(it.priority);
+          return `
+            <tr>
+              <td data-label="Date/Time">${escapeHtml(it.dateTime)}</td>
+              <td data-label="Priority"><span class="pill ${priClass}">${escapeHtml(it.priority)}</span></td>
+              <td data-label="Building">${escapeHtml(it.building)}</td>
+              <td data-label="Floor">${escapeHtml(it.floor)}</td>
+              <td data-label="Department">${escapeHtml(it.department)}</td>
+              <td data-label="Issue Description">${escapeHtml(it.issueDescription)}</td>
+            </tr>
+          `;
+        })
+        .join("");
+    }
+
+    async function loadIssuesFromSheet() {
+      if (!SHEET_WEBAPP_URL) return;
+
+      issuesTbody.innerHTML = `<tr><td colspan="6" style="padding:14px 12px;color:var(--muted);">Loading...</td></tr>`;
+      try {
+        const url = `${SHEET_WEBAPP_URL}?action=list`;
+        const res = await fetch(url, { method: "GET" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        const rows = Array.isArray(payload?.data) ? payload.data : [];
+
+        issues.length = 0;
+        for (const r of rows) {
+          issues.push({
+            dateTime: r.dateTime ?? "",
+            priority: r.priority ?? "",
+            building: r.building ?? "",
+            floor: r.floor ?? "",
+            department: r.department ?? "",
+            issueDescription: r.issueDescription ?? ""
+          });
+        }
+
+        renderIssues();
+      } catch (e) {
+        console.warn("Failed to load sheet list:", e);
+        issuesTbody.innerHTML = `<tr><td colspan="6" style="padding:14px 12px;color:var(--muted);">Could not load the issue list from Google Sheet. (Your Apps Script must support doGet action=list)</td></tr>`;
+      }
+    }
+
+    function toLocalDateTimeValue(d) {
+      const pad = (n) => String(n).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const mm = pad(d.getMonth() + 1);
+      const dd = pad(d.getDate());
+      const hh = pad(d.getHours());
+      const min = pad(d.getMinutes());
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    }
+
+    function updateDateTimeNow() {
+      dateTimeEl.value = toLocalDateTimeValue(new Date());
+    }
+
+    function setFloorOptions(building) {
+      const max = buildingFloors[building];
+      floorEl.innerHTML = `<option value="" disabled selected>Select floor</option>`;
+
+      for (let i = 1; i <= max; i++) {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = String(i);
+        floorEl.appendChild(opt);
+      }
+
+      floorEl.disabled = false;
+    }
+
+    updateDateTimeNow();
+    setInterval(updateDateTimeNow, 1000);
+    renderIssues();
+
+    buildingEl.addEventListener("change", (e) => {
+      const building = e.target.value;
+      if (buildingFloors[building]) setFloorOptions(building);
+    });
+
+    formEl.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const data = {
+        dateTime: dateTimeEl.value,
+        building: buildingEl.value,
+        floor: floorEl.value,
+        department: document.getElementById("department").value.trim(),
+        priority: document.getElementById("priority").value,
+        issueDescription: document.getElementById("issueDescription").value.trim()
+      };
+
+      console.log("Submitted:", data);
+
+      issues.push(data);
+      renderIssues();
+
+      // UI: show saving spinner + message (do NOT open Issue List)
+      submitBtn.disabled = true;
+      showModal({
+        title: "Submitting...",
+        html: `<div class="spinnerRow"><div class="spinner" aria-hidden="true"></div><div>Please wait while we save your request.</div></div>`
+      });
+
+      // Save to Google Sheet (if configured)
+      if (SHEET_WEBAPP_URL) {
+        fetch(SHEET_WEBAPP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        })
+          .then(() => {
+            console.log("Save request sent to sheet");
+            showModal({
+              title: "Submitted successfully",
+              html: `Thank you. Your issue has been submitted.<br><br>Our team will contact you soon.`
+            });
+          })
+          .catch((err) => {
+            console.warn("Sheet save failed:", err);
+            showModal({
+              title: "Submission failed",
+              html: `We couldn't save your issue right now.<br><br>Please contact an authorized person.`
+            });
+          });
+      }
+
+      formEl.reset();
+      floorEl.disabled = true;
+      floorEl.innerHTML = `<option value="" disabled selected>Select floor</option>`;
+      updateDateTimeNow();
+      setActiveTab("form");
+      submitBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>
