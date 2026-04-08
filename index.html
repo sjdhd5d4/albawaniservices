@@ -254,6 +254,10 @@
       tbody tr{
         padding: 10px 12px;
         border-bottom: 1px solid var(--border2);
+        border: 1px solid var(--border2);
+        border-radius: 14px;
+        margin-bottom: 10px;
+        background: #fff;
       }
       tbody td{
         border: none;
@@ -265,6 +269,31 @@
         font-weight: 800;
         color: var(--muted);
       }
+      .reqBlock{
+        margin-top: 8px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border2);
+      }
+    }
+
+    .reqBlock{
+      display:block;
+    }
+    .reqTitle{
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 6px;
+    }
+    .reqList{
+      margin: 0;
+      padding-left: 18px;
+    }
+    .reqList li{
+      margin: 2px 0;
+      word-break: break-word;
     }
   </style>
 </head>
@@ -294,7 +323,7 @@
       </div>
     </div>
 
-    <h3>Maintenance Issue Report Form</h3>
+    <h3>Maintenance Issue Request Form</h3>
 
     <div class="tabs" role="tablist" aria-label="Issue Tabs">
       <button class="tabBtn" id="tabForm" type="button" role="tab" aria-selected="true" aria-controls="panelForm">New Issue (Form)</button>
@@ -348,6 +377,24 @@
           <textarea id="issueDescription" name="issueDescription" placeholder="Describe the issue..." required></textarea>
         </div>
 
+        <div class="full" style="margin-top:4px;">
+          <label style="margin-bottom:8px;">Requested by</label>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+              <label for="requesterName">Requester Name</label>
+              <input id="requesterName" name="requesterName" type="text" placeholder="Full name" required />
+            </div>
+            <div>
+              <label for="requesterContact">Contact Number</label>
+              <input id="requesterContact" name="requesterContact" type="tel" placeholder="e.g., +9665xxxxxxx" required />
+            </div>
+            <div class="full">
+              <label for="requesterEmail">Email (if any)</label>
+              <input id="requesterEmail" name="requesterEmail" type="email" placeholder="name@example.com (optional)" />
+            </div>
+          </div>
+        </div>
+
         <div class="full row">
           <button type="submit">Submit</button>
         </div>
@@ -369,6 +416,7 @@
               <th>Floor</th>
               <th>Department</th>
               <th>Issue Description</th>
+              <th>Requested Baaaaaaaaaaaaaay</th>
             </tr>
           </thead>
           <tbody id="issuesTbody"></tbody>
@@ -459,7 +507,7 @@
     const LIST_PASSWORD = "syed001";
     // Google Sheets saving requires an Apps Script Web App URL.
     // After you deploy the Apps Script, paste the Web App URL here:
-    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzvdaUP5JOcW5B-C8N4kVVXgSTN3Yt2N8Q7sVpSkjmkYsMta74Pdj8l7QU4yaoMwFv8/exec";
+    const SHEET_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbydIxR3SkPSlCGmWbMvhjoKKRxurFOg8CDQzXbPyOoVBOJMRAT4vrSJNGK_G08ORcpD/exec";
 
     function openListWithPassword() {
       if (listAuthorized) {
@@ -509,9 +557,16 @@
         .replaceAll("'", "&#039;");
     }
 
+    function cleanContact(v) {
+      const s = String(v ?? "").trim();
+      if (!s) return "";
+      if (s.toLowerCase() === "abs") return "";
+      return s;
+    }
+
     function renderIssues() {
       if (!issues.length) {
-        issuesTbody.innerHTML = `<tr><td colspan="6" style="padding:14px 12px;color:var(--muted);">No issues yet.</td></tr>`;
+        issuesTbody.innerHTML = `<tr><td colspan="7" style="padding:14px 12px;color:var(--muted);">No issues yet.</td></tr>`;
         return;
       }
 
@@ -520,6 +575,8 @@
         .reverse()
         .map((it) => {
           const priClass = priorityClass(it.priority);
+          const contact = cleanContact(it.requesterContact);
+          const hasReq = Boolean(it.requesterName || contact || it.requesterEmail);
           return `
             <tr>
               <td data-label="Date/Time">${escapeHtml(it.dateTime)}</td>
@@ -528,6 +585,18 @@
               <td data-label="Floor">${escapeHtml(it.floor)}</td>
               <td data-label="Department">${escapeHtml(it.department)}</td>
               <td data-label="Issue Description">${escapeHtml(it.issueDescription)}</td>
+              <td data-label="Requested By">
+                ${hasReq ? `
+                  <div class="reqBlock">
+                    <div class="reqTitle">Requested by</div>
+                    <ul class="reqList">
+                      ${it.requesterName ? `<li><strong>${escapeHtml(it.requesterName)}</strong></li>` : ""}
+                      ${contact ? `<li>${escapeHtml(contact)}</li>` : ""}
+                      ${it.requesterEmail ? `<li>${escapeHtml(it.requesterEmail)}</li>` : ""}
+                    </ul>
+                  </div>
+                ` : ""}
+              </td>
             </tr>
           `;
         })
@@ -537,7 +606,7 @@
     async function loadIssuesFromSheet() {
       if (!SHEET_WEBAPP_URL) return;
 
-      issuesTbody.innerHTML = `<tr><td colspan="6" style="padding:14px 12px;color:var(--muted);">Loading...</td></tr>`;
+      issuesTbody.innerHTML = `<tr><td colspan="7" style="padding:14px 12px;color:var(--muted);">Loading...</td></tr>`;
       try {
         const url = `${SHEET_WEBAPP_URL}?action=list`;
         const res = await fetch(url, { method: "GET" });
@@ -553,14 +622,17 @@
             building: r.building ?? "",
             floor: r.floor ?? "",
             department: r.department ?? "",
-            issueDescription: r.issueDescription ?? ""
+            issueDescription: r.issueDescription ?? "",
+            requesterName: r.requesterName ?? "",
+            requesterContact: r.requesterContact ?? "",
+            requesterEmail: r.requesterEmail ?? ""
           });
         }
 
         renderIssues();
       } catch (e) {
         console.warn("Failed to load sheet list:", e);
-        issuesTbody.innerHTML = `<tr><td colspan="6" style="padding:14px 12px;color:var(--muted);">Could not load the issue list from Google Sheet. (Your Apps Script must support doGet action=list)</td></tr>`;
+        issuesTbody.innerHTML = `<tr><td colspan="7" style="padding:14px 12px;color:var(--muted);">Could not load the issue list from Google Sheet. (Your Apps Script must support doGet action=list)</td></tr>`;
       }
     }
 
@@ -581,6 +653,11 @@
     function setFloorOptions(building) {
       const max = buildingFloors[building];
       floorEl.innerHTML = `<option value="" disabled selected>Select floor</option>`;
+
+      const g = document.createElement("option");
+      g.value = "G";
+      g.textContent = "G (Ground Floor)";
+      floorEl.appendChild(g);
 
       for (let i = 1; i <= max; i++) {
         const opt = document.createElement("option");
@@ -610,7 +687,10 @@
         floor: floorEl.value,
         department: document.getElementById("department").value.trim(),
         priority: document.getElementById("priority").value,
-        issueDescription: document.getElementById("issueDescription").value.trim()
+        issueDescription: document.getElementById("issueDescription").value.trim(),
+        requesterName: document.getElementById("requesterName").value.trim(),
+        requesterContact: document.getElementById("requesterContact").value.trim(),
+        requesterEmail: document.getElementById("requesterEmail").value.trim()
       };
 
       console.log("Submitted:", data);
@@ -627,26 +707,44 @@
 
       // Save to Google Sheet (if configured)
       if (SHEET_WEBAPP_URL) {
-        fetch(SHEET_WEBAPP_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        })
-          .then(() => {
-            console.log("Save request sent to sheet");
+        const postJson = async (mode) => {
+          const res = await fetch(`${SHEET_WEBAPP_URL}?action=add`, {
+            method: "POST",
+            mode,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+          });
+          return res;
+        };
+
+        (async () => {
+          try {
+            const res = await postJson("cors");
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            // If your Apps Script returns JSON, we'll try to read it (optional).
+            // If it doesn't, this will throw and we'll still show success.
+            try { await res.json(); } catch {}
             showModal({
               title: "Submitted successfully",
               html: `Thank you. Your issue has been submitted.<br><br>Our team will contact you soon.`
             });
-          })
-          .catch((err) => {
-            console.warn("Sheet save failed:", err);
-            showModal({
-              title: "Submission failed",
-              html: `We couldn't save your issue right now.<br><br>Please contact an authorized person.`
-            });
-          });
+          } catch (err) {
+            console.warn("CORS submit failed, falling back to no-cors:", err);
+            try {
+              await postJson("no-cors");
+              showModal({
+                title: "Submitted successfully",
+                html: `Thank you. Your issue has been submitted.<br><br>Our team will contact you soon.`
+              });
+            } catch (e2) {
+              console.warn("Sheet submit failed:", e2);
+              showModal({
+                title: "Submission failed",
+                html: `We couldn't save your issue right now.<br><br>Please contact an authorized person.`
+              });
+            }
+          }
+        })();
       }
 
       formEl.reset();
