@@ -416,7 +416,7 @@
               <th>Floor</th>
               <th>Department</th>
               <th>Issue Description</th>
-              <th>Requested Baaaaaaaaaaaaaay</th>
+              <th>Requested By</th>
             </tr>
           </thead>
           <tbody id="issuesTbody"></tbody>
@@ -541,6 +541,37 @@
     // In-memory list (page refresh resets)
     const issues = [];
 
+    // -------- Formatting (match Excel/Google Sheet feel) --------
+    // Adjust these if your sheet uses a different display format.
+    const DISPLAY_LOCALE = "en-GB";
+    function formatDateTimeForDisplay(input) {
+      // Accepts:
+      // - "YYYY-MM-DDTHH:mm" (from <input type="datetime-local">)
+      // - ISO strings
+      // - already-formatted strings (returns as-is if un-parseable)
+      const s = String(input ?? "").trim();
+      if (!s) return "";
+
+      // datetime-local doesn't include timezone; interpret as local time.
+      // "2026-04-08T18:30" is valid for new Date() in modern browsers.
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return s;
+
+      const fmt = new Intl.DateTimeFormat(DISPLAY_LOCALE, {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      return fmt.format(d).replace(",", "");
+    }
+
+    function normalizeMultilineText(s) {
+      // Keep line breaks for display like Sheets' wrapped cells.
+      return String(s ?? "").replaceAll("\r\n", "\n");
+    }
+
     function priorityClass(p) {
       const v = String(p || "").toLowerCase();
       if (v === "high") return "high";
@@ -577,14 +608,16 @@
           const priClass = priorityClass(it.priority);
           const contact = cleanContact(it.requesterContact);
           const hasReq = Boolean(it.requesterName || contact || it.requesterEmail);
+          const dateTimeDisplay = formatDateTimeForDisplay(it.dateTimeDisplay ?? it.dateTime ?? it.dateTimeISO);
+          const issueDesc = normalizeMultilineText(it.issueDescription);
           return `
             <tr>
-              <td data-label="Date/Time">${escapeHtml(it.dateTime)}</td>
+              <td data-label="Date/Time">${escapeHtml(dateTimeDisplay)}</td>
               <td data-label="Priority"><span class="pill ${priClass}">${escapeHtml(it.priority)}</span></td>
               <td data-label="Building">${escapeHtml(it.building)}</td>
               <td data-label="Floor">${escapeHtml(it.floor)}</td>
               <td data-label="Department">${escapeHtml(it.department)}</td>
-              <td data-label="Issue Description">${escapeHtml(it.issueDescription)}</td>
+              <td data-label="Issue Description" style="white-space:pre-wrap;">${escapeHtml(issueDesc)}</td>
               <td data-label="Requested By">
                 ${hasReq ? `
                   <div class="reqBlock">
@@ -681,13 +714,19 @@
     formEl.addEventListener("submit", (e) => {
       e.preventDefault();
 
+      const dateTimeISO = dateTimeEl.value; // raw value
+      const dateTimeDisplay = formatDateTimeForDisplay(dateTimeISO); // sheet-like display
+
       const data = {
-        dateTime: dateTimeEl.value,
+        // Keep both: display for sheet/humans, raw for reliability.
+        dateTime: dateTimeDisplay,
+        dateTimeDisplay,
+        dateTimeISO,
         building: buildingEl.value,
         floor: floorEl.value,
         department: document.getElementById("department").value.trim(),
         priority: document.getElementById("priority").value,
-        issueDescription: document.getElementById("issueDescription").value.trim(),
+        issueDescription: normalizeMultilineText(document.getElementById("issueDescription").value.trim()),
         requesterName: document.getElementById("requesterName").value.trim(),
         requesterContact: document.getElementById("requesterContact").value.trim(),
         requesterEmail: document.getElementById("requesterEmail").value.trim()
